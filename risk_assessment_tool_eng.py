@@ -67,8 +67,8 @@ def calculate_age_scores(age: int) -> tuple[int, int]:
 
 # --- Streamlit Interface and Calculation Logic ---
 
-# Set page title
-st.title("Heart Failure Muscle Weakness Prediction Risk Assessment")
+# Set page title - MODIFIED FOR PROFESSIONAL TONE
+st.title("Predictive Risk Assessment for Muscle Weakness in Heart Failure")
 st.markdown("---")
 
 # --- 1. Input Section ---
