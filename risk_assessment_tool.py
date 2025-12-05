@@ -1,7 +1,46 @@
 import streamlit as st
+import datetime
+
+# --- A. 固定頁尾 CSS/HTML 設置 (保持在頂部以確保樣式優先載入) ---
+
+# 根據您的要求設定版權聲明
+copyright_text = "Copyright© 2025 ChuntingSu. All Rights Reserved."
+current_year = datetime.date.today().year
+
+footer_style = """
+<style>
+/* 隱藏 Streamlit 的預設頁尾 */
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+
+/* 自定義頁尾的樣式 */
+.footer {
+    position: fixed; /* 固定在瀏覽器視窗底部 */
+    bottom: 0;      
+    left: 0;        
+    width: 100%;    
+    background-color: #f0f2f6; /* 背景色 */
+    padding: 10px 0; 
+    text-align: center;
+    font-size: 0.8em;
+    color: #4f4f4f; 
+    z-index: 1000; 
+    border-top: 1px solid #ddd; 
+}
+</style>
+"""
+
+footer_content = f"""
+<div class="footer">
+    {copyright_text}
+</div>
+"""
+# 將 CSS 和 HTML 插入 Streamlit 頁面
+st.markdown(footer_style, unsafe_allow_html=True)
+st.markdown(footer_content, unsafe_allow_html=True)
+
 
 # --- 核心計算函數區 ---
-
 def calculate_hgb_score(gender_is_male: bool, hgb: float) -> int:
     """計算血紅蛋白 (Hemoglobin) 對 AHEAD SCORE 的分數貢獻。"""
     if gender_is_male:
@@ -12,6 +51,10 @@ def calculate_hgb_score(gender_is_male: bool, hgb: float) -> int:
 def calculate_age_scores(age: int) -> tuple[int, int]:
     """
     計算年齡的雙重賦分規則。
+    
+    規則 1: 整體分數年齡分 (大於 75 歲 +5 分)
+    規則 2: AHEAD SCORE 年齡分 (大於 70 歲 +1 分)
+
     Returns: (overall_age_score, ahead_age_score)
     """
     # 規則 1: 整體分數年齡分 (大於 75 歲 +5 分)
@@ -24,12 +67,9 @@ def calculate_age_scores(age: int) -> tuple[int, int]:
 
 # --- Streamlit 介面與計算邏輯 ---
 
-# 設置新標題
+# 設置頁面標題
 st.title("心臟衰竭肌肉無力預測風險評估")
 st.markdown("---")
-
-# 初始化最終總分 (Overall Score)
-OVERALL_SCORE = 0
 
 # --- 1. 輸入區塊 ---
 st.header("📋 數據輸入")
@@ -53,9 +93,9 @@ nyha_score = 4 if nyha_input in ['II', 'IV'] else 0
 st.markdown("---")
 
 # 4. AHEAD SCORE (自動加總分數) - **主項目**
-st.markdown("## 4. AHEAD SCORE")
+st.markdown("## 4. AHEAD SCORE (基於 A, H, E, A, D 因子的修正模型)")
 
-# AHEAD SCORE 總分將在這裡自動呈現
+# AHEAD SCORE 總分將在這裡自動呈現 (使用 st.empty() 佔位)
 ahead_score_placeholder = st.empty() 
 
 col_a, col_b = st.columns(2)
@@ -77,25 +117,24 @@ with col_a:
 # 4-3. HbA1C
 with col_b:
     st.markdown("### 4-3. HbA1C")
-    st.caption(">= 6.5% 則 AHEAD SCORE +1分 (糖尿病)")
+    st.caption(">= 6.5% 則 AHEAD SCORE +1分 (糖尿病因子)")
     hba1c_input = st.number_input("請輸入 HbA1C 數值 (%)", min_value=4.0, max_value=15.0, value=5.5, step=0.1, key='hba1c')
     hba1c_score = 1 if hba1c_input >= 6.5 else 0
 
 # 4-4. Creatinine (Cr)
     st.markdown("### 4-4. Creatinine (Cr)")
     st.caption("> 1.47 mg/dL 則 AHEAD SCORE +1分")
-    # Creatinine 移除 max_value 限制
     cr_input = st.number_input("請輸入 Creatinine 數值 (mg/dL)", min_value=0.5, value=1.0, step=0.01, key='cr') 
     cr_score = 1 if cr_input > 1.47 else 0
 
-# 5. eGFR - **主項目** (重新排序為 5)
+# 5. eGFR - **主項目**
 st.markdown("---")
 st.markdown("## 5. eGFR")
 st.caption("小於或等於 56.45 mL/min/1.73m²，則整體分數 **+2分**")
 egfr_input = st.number_input("請輸入 eGFR 數值 (mL/min/1.73m²)", min_value=10.0, max_value=150.0, value=70.0, step=0.1, key='egfr')
 egfr_score = 2 if egfr_input <= 56.45 else 0
 
-# 6. BMI - **主項目** (重新排序為 6)
+# 6. BMI - **主項目**
 st.markdown("## 6. BMI")
 st.caption("小於或等於 22.5 kg/m²，則整體分數 **+1分**")
 bmi_input = st.number_input("請輸入 BMI 數值 (kg/m²)", min_value=15.0, max_value=40.0, value=25.0, step=0.1, key='bmi')
@@ -107,7 +146,7 @@ bmi_score = 1 if bmi_input <= 22.5 else 0
 AHEAD_SCORE = ahead_age_score + af_score + hgb_score + cr_score + hba1c_score
 
 # B. 在這裡更新 AHEAD SCORE 總分顯示
-ahead_score_placeholder.info(f"AHEAD SCORE 總分自動加總結果為: **{AHEAD_SCORE} 分**")
+ahead_score_placeholder.info(f"AHEAD SCORE 總分自動加總結果為: **{AHEAD_SCORE} 分** (年齡因子貢獻: {ahead_age_score} 分)")
 
 # C. 根據 AHEAD SCORE 總分計算其對整體分數的貢獻
 # 規則: AHEAD SCORE 總分 > 1.5分 則整體分數 +3分
@@ -115,11 +154,11 @@ ahead_overall_score = 3 if AHEAD_SCORE > 1.5 else 0
 
 # D. 計算整體分數 (OVERALL_SCORE) 總和
 OVERALL_SCORE = (
-    overall_age_score   
-    + nyha_score        
-    + ahead_overall_score 
-    + egfr_score        
-    + bmi_score         
+    overall_age_score     # 規則 1: 年齡 > 75 歲 (+5 分)
+    + nyha_score          # NYHA II/IV (+4 分)
+    + ahead_overall_score # AHEAD 總分 > 1.5 (+3 分)
+    + egfr_score          # eGFR <= 56.45 (+2 分)
+    + bmi_score           # BMI <= 22.5 (+1 分)
 )
 
 # --- 3. 結果呈現區 ---
@@ -137,7 +176,7 @@ else: # OVERALL_SCORE >= 11
     risk_level_zh = "高風險 (High Risk)"
     color = "red"
 
-# 最終總分呈現 (符合要求格式)
+# 最終總分呈現 
 st.metric(
     label="你的肌肉無力預測因子總分為", 
     value=f"{OVERALL_SCORE} 分"
@@ -147,7 +186,7 @@ st.metric(
 st.markdown(f"該分數屬於: <span style='font-size:28px; color:{color};'>**{risk_level_zh}**</span>", unsafe_allow_html=True)
 
 st.markdown("---")
-st.subheader("💡 整體分數構成明細")
+st.subheader("📊 整體分數構成明細")
 st.markdown(f"""
 | 獨立風險因子 | 觸發條件 | 分數貢獻 |
 | :--- | :--- | :--- |
