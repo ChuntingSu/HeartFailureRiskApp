@@ -26,23 +26,23 @@ st.markdown("---")
 # --- 1. 數據輸入區 ---
 st.header("📋 數據輸入")
 
-# 1. 性別
-st.markdown("## 1. 性別")
+# 1. 性別 (Gender)
+st.markdown("## 1. 性別 (Gender)")
 gender = st.selectbox("請選擇性別", ['男性 (Male)', '女性 (Female)'])
 gender_is_male = (gender == '男性 (Male)')
 
-# 2. 年紀
-st.markdown("## 2. 年紀")
+# 2. 年齡 (Age)
+st.markdown("## 2. 年齡 (Age)")
 st.markdown("""
 <style> .custom-caption { font-size: 0.85rem; color: #666; margin-bottom: 2px; } </style>
 <div class="custom-caption">1. <b>Overall Score:</b> > 75 歲 加 <b>10分</b></div>
 <div class="custom-caption">2. <b>AHEAD Score:</b> > 70 歲 加 <b>1分</b></div>
 """, unsafe_allow_html=True)
-age_input = st.number_input("請輸入患者年齡 (歲)", min_value=1, max_value=120, value=65, step=1)
+age_input = st.number_input("請輸入患者年齡 (歲, years old)", min_value=1, max_value=120, value=65, step=1)
 overall_age_score, ahead_age_score = calculate_age_scores(age_input)
 
-# 3. NYHA
-st.markdown("## 3. NYHA")
+# 3. 美國紐約心臟病學會 (New York Heart Association, NYHA) 活動分級
+st.markdown("## 3. 美國紐約心臟病學會 (New York Heart Association, NYHA) 活動分級")
 st.caption("II 級 **+7分** / IV 級 **+3分**")
 nyha_input = st.radio("請選擇 NYHA 分級", ['I', 'II', 'III', 'IV'], index=0, horizontal=True, key='nyha')
 
@@ -55,60 +55,60 @@ else:
 
 st.markdown("---")
 
-# 4. AHEAD SCORE & HB 雙重規則
-st.markdown("## 4. AHEAD SCORE & 檢驗數值")
+# 4. AHEAD 指數 (AHEAD score) & 檢驗數值
+st.markdown("## 4. AHEAD 指數 (AHEAD score) 組成因子")
 ahead_score_placeholder = st.empty() 
 
 col_a, col_b = st.columns(2)
 
 with col_a:
-    st.markdown("### 4-1. Af (心房顫動)")
+    st.markdown("### 4-1. 心房顫動 (Atrial Fibrillation; Af)")
     af_input = st.radio("是否患有心房顫動", ['否', '是'], index=0, horizontal=True, key='af')
     af_score = 1 if af_input == '是' else 0
 
-    st.markdown("### 4-2. Hemoglobin (Hb)")
+    st.markdown("### 4-2. 血紅素 (Hemoglobin; Hb)")
     st.markdown("""
-    <div class="custom-caption">1. <b>Overall Score:</b> Hb ≤ 15.8 加 <b>3分</b></div>
-    <div class="custom-caption">2. <b>AHEAD Score:</b> 男 < 13 / 女 < 12 加 <b>1分</b></div>
+    <div class="custom-caption">1. <b>Overall Score:</b> Hb ≤ 15.8 g/dL 加 <b>3分</b></div>
+    <div class="custom-caption">2. <b>AHEAD Score:</b> 男 < 13 / 女 < 12 g/dL 加 <b>1分</b></div>
     """, unsafe_allow_html=True)
-    hgb_input = st.number_input("請輸入血紅蛋白數值 (g/dL)", min_value=1.0, max_value=25.0, value=14.0, step=0.1, key='hgb')
+    hgb_input = st.number_input("請輸入血紅素數值 (g/dL)", min_value=1.0, max_value=25.0, value=14.0, step=0.1, key='hgb')
     
     hgb_ahead_contribution = calculate_hgb_ahead_score(gender_is_male, hgb_input)
     hgb_overall_score = 3 if hgb_input <= 15.8 else 0
 
 with col_b:
-    st.markdown("### 4-3. HbA1C")
-    st.caption("≥ 6.5% 則 AHEAD SCORE +1分")
-    hba1c_input = st.number_input("請輸入 HbA1C 數值 (%)", min_value=1.0, max_value=20.0, value=5.5, step=0.1, key='hba1c')
+    st.markdown("### 4-3. 糖化血色素 (Glycated Hemoglobin, HbA1c)")
+    st.caption("≥ 6.5% 則 AHEAD 指數 +1分")
+    hba1c_input = st.number_input("請輸入糖化血色素數值 (%)", min_value=1.0, max_value=20.0, value=5.5, step=0.1, key='hba1c')
     hba1c_ahead_score = 1 if hba1c_input >= 6.5 else 0
 
-    st.markdown("### 4-4. Creatinine (Cr)")
-    st.caption("> 1.47 mg/dL 則 AHEAD SCORE +1分")
-    cr_input = st.number_input("請輸入 Creatinine 數值 (mg/dL)", min_value=0.1, value=1.0, step=0.01, key='cr') 
+    st.markdown("### 4-4. 肌酐酸 (Creatinine; Creat)")
+    st.caption("> 1.47 mg/dL 則 AHEAD 指數 +1分")
+    cr_input = st.number_input("請輸入肌酐酸數值 (mg/dL)", min_value=0.1, value=1.0, step=0.01, key='cr') 
     cr_ahead_score = 1 if cr_input > 1.47 else 0
 
-# 5. eGFR
+# 5. 估算腎絲球濾過率 (estimated Glomerular Filtration Rate, eGFR)
 st.markdown("---")
-st.markdown("## 5. eGFR")
+st.markdown("## 5. 估算腎絲球濾過率 (estimated Glomerular Filtration Rate, eGFR)")
 st.caption("小於或等於 56.45 mL/min/1.73m²，則整體分數 **+4分**")
 egfr_input = st.number_input("請輸入 eGFR 數值 (mL/min/1.73m²)", min_value=1.0, max_value=200.0, value=70.0, step=0.1, key='egfr')
 egfr_score = 4 if egfr_input <= 56.45 else 0
 
-# 6. BMI
-st.markdown("## 6. BMI")
+# 6. 身體質量指數 (Body Mass Index; BMI)
+st.markdown("## 6. 身體質量指數 (Body Mass Index; BMI)")
 st.caption("小於或等於 22.5 kg/m²，則整體分數 **+2分**")
 bmi_input = st.number_input("請輸入 BMI 數值 (kg/m²)", min_value=5.0, max_value=60.0, value=25.0, step=0.1, key='bmi')
 bmi_score = 2 if bmi_input <= 22.5 else 0
 
 # --- 2. 雙重分數計算與加總 ---
 
-AHEAD_SCORE = ahead_age_score + af_score + hgb_ahead_contribution + cr_ahead_score + hba1c_ahead_score
-ahead_score_placeholder.info(f"AHEAD SCORE 總分自動加總結果為: **{AHEAD_SCORE} 分**")
+AHEAD_TOTAL_SCORE = ahead_age_score + af_score + hgb_ahead_contribution + cr_ahead_score + hba1c_ahead_score
+ahead_score_placeholder.info(f"AHEAD 指數 (AHEAD score) 自動加總結果為: **{AHEAD_TOTAL_SCORE} 分**")
 
-ahead_overall_score = 1 if AHEAD_SCORE > 1.5 else 0
+ahead_overall_score = 1 if AHEAD_TOTAL_SCORE > 1.5 else 0
 
 OVERALL_SCORE = (
-    overall_age_score    
+    overall_age_score     
     + nyha_score         
     + ahead_overall_score 
     + egfr_score         
@@ -120,21 +120,19 @@ OVERALL_SCORE = (
 st.markdown("---")
 st.header("✨ 評估結果")
 
-# 風險分級與顏色
 if OVERALL_SCORE <= 10:
     risk_level_zh = "低風險 (Low Risk)"
-    color = "#28a745" # Green
+    color = "#28a745"
     risk_idx = 0
 elif 11 <= OVERALL_SCORE <= 20:
     risk_level_zh = "中等風險 (Intermediate Risk)"
-    color = "#fd7e14" # Orange
+    color = "#fd7e14"
     risk_idx = 1
 else:
     risk_level_zh = "高風險 (High Risk)"
-    color = "#dc3545" # Red
+    color = "#dc3545"
     risk_idx = 2
 
-# 使用兩欄顯示：分數與風險區段定義
 res_col1, res_col2 = st.columns([1, 1])
 
 with res_col1:
@@ -143,7 +141,6 @@ with res_col1:
 
 with res_col2:
     st.markdown("**風險區段定義：**")
-    # 建立一個簡單的 HTML 背景色區塊來顯示區段
     st.markdown(f"""
     <div style="border-left: 5px solid #28a745; padding-left: 10px; margin-bottom: 5px; background-color: {'#e8f5e9' if risk_idx==0 else 'transparent'};">
         <b>0 - 10 分</b>：低風險
@@ -161,12 +158,12 @@ st.subheader("📊 整體分數構成明細")
 st.markdown(f"""
 | 獨立風險因子 | 觸發條件 | 分數貢獻 |
 | :--- | :--- | :--- |
-| **年紀 (Overall)** | $> 75$ 歲 | **{overall_age_score} 分** |
-| **NYHA** | II 級 (+7) 或 IV 級 (+3) | **{nyha_score} 分** |
-| **AHEAD 總分判斷** | $> 1.5$ 分 | **{ahead_overall_score} 分** |
-| **eGFR** | $\le 56.45$ | **{egfr_score} 分** |
-| **HB (Overall)** | $\le 15.8$ | **{hgb_overall_score} 分** |
-| **BMI** | $\le 22.5$ | **{bmi_score} 分** |
+| **年齡 (Age)** | $> 75$ 歲 | **{overall_age_score} 分** |
+| **NYHA 活動分級** | II 級 (+7) 或 IV 級 (+3) | **{nyha_score} 分** |
+| **AHEAD 指數 (AHEAD score)** | $> 1.5$ 分 | **{ahead_overall_score} 分** |
+| **eGFR (腎絲球濾過率)** | $\le 56.45$ mL/min/1.73m² | **{egfr_score} 分** |
+| **血紅素 (Hb)** | $\le 15.8$ g/dL | **{hgb_overall_score} 分** |
+| **BMI (身體質量指數)** | $\le 22.5$ kg/m² | **{bmi_score} 分** |
 """)
 
 # --- 頁尾版權 ---
