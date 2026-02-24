@@ -62,11 +62,11 @@ ahead_score_placeholder = st.empty()
 col_a, col_b = st.columns(2)
 
 with col_a:
-    st.markdown("### 4-1. 心房顫動 (Atrial Fibrillation; Af)")
+    st.markdown("### 4-1. 心房顫動 (Atrial Fibrillation, Af)")
     af_input = st.radio("是否患有心房顫動", ['否', '是'], index=0, horizontal=True, key='af')
     af_score = 1 if af_input == '是' else 0
 
-    st.markdown("### 4-2. 血紅素 (Hemoglobin; Hb)")
+    st.markdown("### 4-2. 血紅素 (Hemoglobin, Hb)")
     st.markdown("""
     <div class="custom-caption">1. <b>Overall Score:</b> Hb ≤ 15.8 g/dL 加 <b>3分</b></div>
     <div class="custom-caption">2. <b>AHEAD Score:</b> 男 < 13 / 女 < 12 g/dL 加 <b>1分</b></div>
@@ -82,7 +82,7 @@ with col_b:
     hba1c_input = st.number_input("請輸入糖化血色素數值 (%)", min_value=1.0, max_value=20.0, value=5.5, step=0.1, key='hba1c')
     hba1c_ahead_score = 1 if hba1c_input >= 6.5 else 0
 
-    st.markdown("### 4-4. 肌酐酸 (Creatinine; Creat)")
+    st.markdown("### 4-4. 肌酐酸 (Creatinine, Creat)")
     st.caption("> 1.47 mg/dL 則 AHEAD 指數 +1分")
     cr_input = st.number_input("請輸入肌酐酸數值 (mg/dL)", min_value=0.1, value=1.0, step=0.01, key='cr') 
     cr_ahead_score = 1 if cr_input > 1.47 else 0
@@ -95,7 +95,7 @@ egfr_input = st.number_input("請輸入 eGFR 數值 (mL/min/1.73m²)", min_value
 egfr_score = 4 if egfr_input <= 56.45 else 0
 
 # 6. 身體質量指數 (Body Mass Index; BMI)
-st.markdown("## 6. 身體質量指數 (Body Mass Index; BMI)")
+st.markdown("## 6. 身體質量指數 (Body Mass Index, BMI)")
 st.caption("小於或等於 22.5 kg/m²，則整體分數 **+2分**")
 bmi_input = st.number_input("請輸入 BMI 數值 (kg/m²)", min_value=5.0, max_value=60.0, value=25.0, step=0.1, key='bmi')
 bmi_score = 2 if bmi_input <= 22.5 else 0
@@ -158,12 +158,12 @@ st.subheader("📊 整體分數構成明細")
 st.markdown(f"""
 | 獨立風險因子 | 觸發條件 | 分數貢獻 |
 | :--- | :--- | :--- |
-| **年齡 (Age)** | $> 75$ 歲 | **{overall_age_score} 分** |
+| **年齡** | $> 75$ 歲 | **{overall_age_score} 分** |
 | **NYHA 活動分級** | II 級 (+7) 或 IV 級 (+3) | **{nyha_score} 分** |
-| **AHEAD 指數 (AHEAD score)** | $> 1.5$ 分 | **{ahead_overall_score} 分** |
-| **eGFR (腎絲球濾過率)** | $\le 56.45$ mL/min/1.73m² | **{egfr_score} 分** |
-| **血紅素 (Hb)** | $\le 15.8$ g/dL | **{hgb_overall_score} 分** |
-| **BMI (身體質量指數)** | $\le 22.5$ kg/m² | **{bmi_score} 分** |
+| **AHEAD 指數** | $> 1.5$ 分 | **{ahead_overall_score} 分** |
+| **腎絲球濾過率** | $\le 56.45$ mL/min/1.73m² | **{egfr_score} 分** |
+| **血紅素** | $\le 15.8$ g/dL | **{hgb_overall_score} 分** |
+| **身體質量指數** | $\le 22.5$ kg/m² | **{bmi_score} 分** |
 """)
 
 # --- 頁尾版權 ---
@@ -181,3 +181,4 @@ footer_style = """
 """
 st.markdown(footer_style, unsafe_allow_html=True)
 st.markdown(f'<div class="footer">{copyright_text}</div>', unsafe_allow_html=True)
+
