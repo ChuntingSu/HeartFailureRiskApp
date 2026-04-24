@@ -1,123 +1,119 @@
 import streamlit as st
+import pandas as pd
 
-# --- 1. 核心計算函數區 (更新為 50 分制系統) ---
+# --- 1. 核心計算函數區 (回傳總分與各分項明細) ---
 
-def calculate_muscle_call_50_score(age, nyha, egfr, bmi, hb):
-    """
-    根據 Framingham-style Logistic Regression 結果計算總分 (總分 50)
-    基準組 (0分): NYHA I & II, Age <= 75.5, Hb > 11.55, BMI > 22.5, eGFR > 74.65
-    """
-    score = 0
+def calculate_detailed_scores(age, nyha, hb, egfr, bmi):
+    """計算總分並回傳各項貢獻分數"""
+    details = {}
     
-    # 1. NYHA 分級權重
+    # 1. NYHA 分級權重 (基準 I/II 為 0)
     if nyha == 'IV': 
-        score += 18
+        details['NYHA 活動分級'] = 18
     elif nyha == 'III': 
-        score += 9
-    # NYHA I 與 II 為基準組，加 0 分
-    
+        details['NYHA 活動分級'] = 9
+    else:
+        details['NYHA 活動分級'] = 0
+        
     # 2. 年齡 (Age > 75.5)
-    if age > 75.5: 
-        score += 11
+    details['年齡'] = 11 if age > 75.5 else 0
         
     # 3. 血紅素 (Hb <= 11.55)
-    if hb <= 11.55: 
-        score += 5
+    details['血紅素'] = 5 if hb <= 11.55 else 0
         
     # 4. 身體質量指數 (BMI <= 22.5)
-    if bmi <= 22.5: 
-        score += 5
+    details['身體質量指數'] = 5 if bmi <= 22.5 else 0
         
-    # 5. 腎功能 (eGFR <= 74.65)
-    if egfr <= 74.65: 
-        score += 1
+    # 5. 腎絲球過濾率 (eGFR <= 74.65)
+    details['腎絲球過濾率'] = 1 if egfr <= 74.65 else 0
         
-    return score
+    total_score = sum(details.values())
+    return total_score, details
 
 # --- Streamlit 介面配置 ---
 
-st.set_page_config(page_title="Muscle Call 風險預測系統 v2.0", layout="centered")
+st.set_page_config(page_title="Muscle Call 風險預測系統", layout="centered")
 st.title("心力叫瘁（Muscle Call）風險預測系統")
-st.subheader("基於 Framingham 邏輯之 50 分計分架構")
-st.markdown("本系統採用邏輯斯回歸權重轉化，協助評估心衰患者之肌肉無力風險。")
 st.markdown("---")
 
 # --- 2. 數據輸入區 ---
 st.header("📋 臨床數據輸入")
 
-col1, col2 = st.columns(2)
+# 依照您的要求調整順序與名稱
+# 1. 年齡
+st.markdown("### 1. 年齡 (Age)")
+age_input = st.number_input("請輸入患者年齡 (歲)", min_value=1.0, max_value=120.0, value=65.0, step=0.1)
 
-with col1:
-    st.markdown("### 1. 基本生理指標")
-    age_input = st.number_input("患者年齡 (歲)", min_value=1.0, max_value=120.0, value=65.0, step=0.1)
-    bmi_input = st.number_input("BMI 數值 (kg/m²)", min_value=5.0, max_value=60.0, value=24.0, step=0.1)
-    hgb_input = st.number_input("血紅素 Hb (g/dL)", min_value=1.0, max_value=25.0, value=13.0, step=0.1)
+# 2. NYHA
+st.markdown("### 2. 美國紐約心臟病學會 (New York Heart Association, NYHA) 活動分級")
+nyha_input = st.radio("請選擇分級", ['I', 'II', 'III', 'IV'], index=1, horizontal=True)
+st.caption("註：系統將 I 級與 II 級視為初步風險基準 (0分)。")
 
-with col2:
-    st.markdown("### 2. 器官功能指標")
-    egfr_input = st.number_input("eGFR (mL/min/1.73m²)", min_value=1.0, max_value=200.0, value=70.0, step=0.1)
-    st.write("") # 間隔
-    nyha_input = st.radio("NYHA 心功能分級", ['I', 'II', 'III', 'IV'], index=1, horizontal=True)
-    st.caption("註：系統將 I 級與 II 級視為初步風險基準。")
+# 3. Hb
+st.markdown("### 3. 血紅素 (Hemoglobin, Hb)")
+hb_input = st.number_input("請輸入血紅素數值 (g/dL)", min_value=1.0, max_value=25.0, value=13.0, step=0.1)
 
-# --- 3. 邏輯計算與切點定義 ---
-# 注意：此處的切點需替換為你執行新 ROC 程式碼後得到的數值
-# 假設值預估：Low/Mod ≈ 10, Mod/High ≈ 25 (請依實際跑出的結果修改下面兩行)
+# 4. eGFR
+st.markdown("### 4. 估算腎絲球過濾率 (estimated glomerular filtration rate, eGFR)")
+egfr_input = st.number_input("請輸入 eGFR 數值 (mL/min/1.73m²)", min_value=1.0, max_value=200.0, value=75.0, step=0.1)
+
+# 5. BMI
+st.markdown("### 5. 身體質量指數 (body mass index, BMI)")
+bmi_input = st.number_input("請輸入 BMI 數值 (kg/m²)", min_value=5.0, max_value=60.0, value=24.0, step=0.1)
+
+# --- 3. 計算結果 ---
+total_score, score_details = calculate_detailed_scores(age_input, nyha_input, hb_input, egfr_input, bmi_input)
+
+# 設定 ROC 切點 (請根據您跑出來的結果修改這兩個數值)
 CUTOFF_LOW_MOD = 10.0  
 CUTOFF_MOD_HIGH = 25.0 
 
-total_score = calculate_muscle_call_50_score(age_input, nyha_input, egfr_input, bmi_input, hgb_input)
-
 # --- 4. 結果呈現區 ---
 st.markdown("---")
-st.header("✨ 評估結果")
+st.header("✨ 評估結果呈現")
 
-# 風險分級判斷邏輯
+# 顯示總分
+col_score, col_status = st.columns([1, 2])
+with col_score:
+    st.metric(label="最終評估總分", value=f"{total_score} / 50")
+
+# 判斷風險等級
 if total_score < CUTOFF_LOW_MOD:
-    risk_level = "低風險 (Low Risk)"
-    color = "#28a745"  # 綠色
-    bg_color = "#e8f5e9"
-    advice = "患者目前各項生理指標指標在風險門檻以下。建議維持常規追蹤與均衡營養。"
-    risk_idx = 0
+    risk_level, color, bg_color = "低風險 (Low Risk)", "#28a745", "#e8f5e9"
+    advice = "患者指標相對穩定，建議維持現有追蹤。"
 elif total_score < CUTOFF_MOD_HIGH:
-    risk_level = "中等風險 (Intermediate Risk)"
-    color = "#fd7e14"  # 橘色
-    bg_color = "#fff3e0"
-    advice = "患者存在部分風險因子（總分 50 分制已反映其权重）。建議進行個別化營養評估並規律監測肌力。"
-    risk_idx = 1
+    risk_level, color, bg_color = "中等風險 (Intermediate Risk)", "#fd7e14", "#fff3e0"
+    advice = "患者存在潛在風險，建議加強營養與肌力監測。"
 else:
-    risk_level = "高風險 (High Risk)"
-    color = "#dc3545"  # 紅色
-    bg_color = "#fdecea"
-    advice = "【臨床高度警示】患者風險得分已達高危門檻。強烈建議儘速進行復健介入及預防衰弱治療。"
-    risk_idx = 2
+    risk_level, color, bg_color = "高風險 (High Risk)", "#dc3545", "#fdecea"
+    advice = "【高度警示】建議儘速進行臨床介入與復健評估。"
 
-# 呈現得分與建議
+with col_status:
+    st.markdown(f"""
+    <div style="background-color:{bg_color}; padding: 15px; border-radius: 10px; border-left: 5px solid {color};">
+        <h3 style="color:{color}; margin:0;">{risk_level}</h3>
+        <p style="margin:5px 0 0 0;">{advice}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# --- 5. 顯示各變項貢獻分數 (橫向長條圖) ---
+st.markdown("### 📊 各變項風險權重貢獻")
+df_details = pd.DataFrame({
+    '臨床變項': list(score_details.keys()),
+    '貢獻分數': list(score_details.values())
+})
+
+# 使用 Streamlit 原生長條圖顯示
+st.bar_chart(df_details.set_index('臨床變項'))
+
+# 使用表格呈現精確明細
+with st.expander("檢視詳細分數明細表"):
+    st.table(df_details)
+
+# --- 6. 頁尾版權 ---
 st.markdown(f"""
-<div style="background-color:{bg_color}; padding: 25px; border-radius: 10px; border-left: 8px solid {color};">
-    <h2 style="color:{color}; margin:0;">評估結果：{risk_level}</h2>
-    <p style="font-size:22px; color:#333; margin-top:10px;">總風險得分：<b>{total_score}</b> / 50</p>
-    <p style="font-size:18px; color:#333; margin-top:5px;"><b>專業建議：</b>{advice}</p>
+<div style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #f0f2f6; 
+            padding: 10px 0; text-align: center; font-size: 0.8em; color: #4f4f4f; border-top: 1px solid #ddd;">
+    Copyright© 2026 ChuntingSu. All Rights Reserved.
 </div>
-""", unsafe_allow_html=True)
-
-# 風險燈號可視化
-st.markdown("<br>", unsafe_allow_html=True)
-col_res1, col_res2, col_res3 = st.columns(3)
-col_res1.markdown(f"<div style='text-align:center; padding:10px; border-radius:5px; background-color:{'#28a745; color:white' if risk_idx==0 else '#f0f2f6'};'>🟢 低風險</div>", unsafe_allow_html=True)
-col_res2.markdown(f"<div style='text-align:center; padding:10px; border-radius:5px; background-color:{'#fd7e14; color:white' if risk_idx==1 else '#f0f2f6'};'>🟡 中等風險</div>", unsafe_allow_html=True)
-col_res3.markdown(f"<div style='text-align:center; padding:10px; border-radius:5px; background-color:{'#dc3545; color:white' if risk_idx==2 else '#f0f2f6'};'>🔴 高風險</div>", unsafe_allow_html=True)
-
-# --- 5. 頁尾版權 ---
-copyright_text = "Copyright© 2026 ChuntingSu. All Rights Reserved."
-st.markdown(f"""
-<style>
-.footer {{
-    position: fixed; bottom: 0; left: 0; width: 100%;
-    background-color: #f0f2f6; padding: 10px 0;
-    text-align: center; font-size: 0.8em; color: #4f4f4f;
-    border-top: 1px solid #ddd;
-}}
-</style>
-<div class="footer">{copyright_text}</div>
 """, unsafe_allow_html=True)
