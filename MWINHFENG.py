@@ -102,11 +102,11 @@ if total_score < CUTOFF_LOW_MOD:
     msg_func = st.success
 elif total_score < CUTOFF_MOD_HIGH:
     risk_level, color, bg_color = "🟡 Intermediate Risk", "#fd7e14", "#fff3e0"
-    advice = "Referral to a dietitian and physiotherapist is recommended for nutrition and exercise intervention counseling."
+    advice = "Refer to a nutritionist and a rehabilitation therapist for consultation on nutrition and exercise interventions."
     msg_func = st.warning
 else:
     risk_level, color, bg_color = "🔴 High Risk", "#dc3545", "#fdecea"
-    advice = "Please contact medical facilities for a professional muscle strength assessment. Fall prevention in daily life is strongly advised."
+    advice = "Refer to the interdisciplinary team, closely monitor, and prevent falls."
     msg_func = st.error
 
 # Display Score Highlight Box
