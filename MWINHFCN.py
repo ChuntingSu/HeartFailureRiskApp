@@ -31,16 +31,16 @@ def calculate_detailed_scores(age, nyha, hb, egfr, bmi):
     return total_score, details
 
 # --- Streamlit 介面配置 ---
-st.set_page_config(page_title="Muscle Call 風險預測系統", layout="centered")
-st.title("心力叫瘁（Muscle Call）風險預測系統")
+st.set_page_config(page_title="Muscle Call in Heart failure風險預測系統", layout="centered")
+st.title("心力叫瘁（Muscle Call in Heart failure）風險預測系統")
 st.markdown("---")
 
 # --- 2. 數據輸入區 ---
 st.header("📋 臨床數據輸入")
 age_input = st.number_input("1. 請輸入患者年齡 (歲)", min_value=1.0, max_value=120.0, value=65.0, step=0.1)
-nyha_input = st.radio("2. 美國紐約心臟病學會 (NYHA) 活動分級", ['I', 'II', 'III', 'IV'], index=1, horizontal=True)
+nyha_input = st.radio("2. 請輸入美國紐約心臟病學會 (NYHA) 活動分級", ['I', 'II', 'III', 'IV'], index=1, horizontal=True)
 hb_input = st.number_input("3. 請輸入血紅素數值 (Hb, g/dL)", min_value=1.0, max_value=25.0, value=13.0, step=0.1)
-egfr_input = st.number_input("4. 估算腎絲球過濾率 (eGFR, mL/min/1.73m²)", min_value=1.0, max_value=200.0, value=75.0, step=0.1)
+egfr_input = st.number_input("4. 請輸入估算腎絲球過濾率 (eGFR, mL/min/1.73m²)", min_value=1.0, max_value=200.0, value=75.0, step=0.1)
 bmi_input = st.number_input("5. 請輸入 BMI 數值 (kg/m²)", min_value=5.0, max_value=60.0, value=24.0, step=0.1)
 
 # --- 3. 計算結果 ---
@@ -64,7 +64,7 @@ elif total_score < CUTOFF_MOD_HIGH:
     msg_func = st.warning
 else:
     risk_level, color, bg_color = "🔴 高風險 (High Risk)", "#dc3545", "#fdecea"
-    advice = "請聯繫醫療院所進行肌肉力量之評估，日常生活請預防跌倒。"
+    advice = "積極轉介跨團隊評估，嚴密追蹤、預防跌倒。"
     msg_func = st.error
 
 # 顯示總分區塊
